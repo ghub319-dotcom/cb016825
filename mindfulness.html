@@ -4,109 +4,58 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Mindfulness</title>
-<link rel="stylesheet" href="styles.css">
 <style>
-  .breath {
-    width: 150px;
-    height: 150px;
-    margin: 20px auto;
-    border-radius: 50%;
-    background: lightblue;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 4s ease-in-out;
-  }
-  .inhale { transform: scale(1.3); background: skyblue; }
-  .exhale { transform: scale(0.8); background: lightgreen; }
+  body{font-family:sans-serif;margin:0;text-align:center}
+  nav{padding:10px;background:#eee;display:flex;gap:10px}
+  .brand{font-weight:bold;margin-right:auto}
+  .breath{width:150px;height:150px;margin:20px auto;border-radius:50%;
+          display:flex;align-items:center;justify-content:center;
+          background:lightblue;transition:transform 4s ease-in-out}
+  .inhale{transform:scale(1.3);background:skyblue}
+  .exhale{transform:scale(0.8);background:lightgreen}
 </style>
 </head>
 <body>
-<nav class="nav"><div class="brand">GreenBite</div><a href="index.html">Home</a></nav>
+<nav><div class="brand">GreenBite</div><a href="index.html">Home</a></nav>
 <main>
   <h1>Mindfulness</h1>
   <div class="card">
     <div id="breath" class="breath">Breathe</div>
     <p id="breathText"></p>
-    <div>
-      <button id="startBreath">Start Breath</button>
-      <button id="stopBreath">Stop</button>
-    </div>
-    <hr/>
+    <button onclick="startBreathing()">Start Breath</button>
+    <button onclick="stopBreathing()">Stop</button>
+    <hr>
     <h3>Timer</h3>
-    <label>Minutes <input id="minInput" type="number" value="1" min="1"></label>
-    <button id="startTimer">Start Session</button>
+    <input id="minInput" type="number" value="1" min="1"> min
+    <button onclick="startTimer()">Start Session</button>
     <p id="sessionMsg"></p>
-    <div>
-      <button id="soundToggle">Toggle Ambient</button>
-    </div>
+    <button id="soundToggle" onclick="toggleSound()">Toggle Ambient</button>
   </div>
 </main>
 <script>
-let cycle = [
-  {phase:'Inhale', class:'inhale', duration:4000},
-  {phase:'Hold', class:'', duration:2000},
-  {phase:'Exhale', class:'exhale', duration:4000},
-  {phase:'Hold', class:'', duration:2000}
+const breathEl=document.getElementById("breath"),
+      txt=document.getElementById("breathText"),
+      msg=document.getElementById("sessionMsg"),
+      btn=document.getElementById("soundToggle"),
+      audio=new Audio("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3");
+audio.loop=true;audio.volume=0.2;
+let idx=0,timer,bSound=false,steps=[
+  {t:4000,p:"Inhale",c:"inhale"},
+  {t:2000,p:"Hold",c:""},
+  {t:4000,p:"Exhale",c:"exhale"},
+  {t:2000,p:"Hold",c:""}
 ];
-let breathInterval=null, breathIndex=0;
 
-function startBreathing(){
-  const el=document.getElementById('breath');
-  const txt=document.getElementById('breathText');
-
-  function runCycle(){
-    let step=cycle[breathIndex];
-    el.className='breath '+step.class;
-    txt.textContent=step.phase;
-    breathIndex=(breathIndex+1)%cycle.length;
-    breathInterval=setTimeout(runCycle, step.duration);
-  }
-  runCycle();
+function cycle(){let s=steps[idx];breathEl.className="breath "+s.c;txt.textContent=s.p;idx=(idx+1)%steps.length;timer=setTimeout(cycle,s.t);}
+function startBreathing(){cycle();}
+function stopBreathing(){clearTimeout(timer);idx=0;breathEl.className="breath";txt.textContent="";}
+function startTimer(){
+  let secs=(+document.getElementById("minInput").value||1)*60;
+  msg.textContent="Session running...";
+  const id=setInterval(()=>{if(--secs<=0){clearInterval(id);msg.textContent="Session complete!";track();}},1000);
 }
-function stopBreathing(){
-  clearTimeout(breathInterval);
-  breathIndex=0;
-  document.getElementById('breath').className='breath';
-  document.getElementById('breathText').textContent='';
-}
-
-document.getElementById('startBreath').addEventListener('click', startBreathing);
-document.getElementById('stopBreath').addEventListener('click', stopBreathing);
-
-// Timer
-document.getElementById('startTimer').addEventListener('click', ()=>{
-  const mins = Number(document.getElementById('minInput').value) || 1;
-  let secs = mins*60;
-  document.getElementById('sessionMsg').textContent = 'Session running: '+mins+' min';
-  const id = setInterval(()=>{
-    secs--;
-    if(secs<=0){ clearInterval(id); document.getElementById('sessionMsg').textContent='Session complete!'; trackSession(); }
-  },1000);
-});
-
-// Ambient sound with audio file
-let ambientOn=false, audio=new Audio("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3");
-audio.loop=true; audio.volume=0.2;
-
-document.getElementById('soundToggle').addEventListener('click', ()=>{
-  if(!ambientOn){
-    audio.play();
-    ambientOn=true;
-    document.getElementById('soundToggle').textContent='Stop Ambient';
-  }else{
-    audio.pause();
-    ambientOn=false;
-    document.getElementById('soundToggle').textContent='Toggle Ambient';
-  }
-});
-
-function trackSession(){
-  const k='green_sessions';
-  const arr = JSON.parse(localStorage.getItem(k) || '[]');
-  arr.push({when:new Date().toISOString()});
-  localStorage.setItem(k, JSON.stringify(arr));
-}
+function toggleSound(){bSound?audio.pause():audio.play();bSound=!bSound;btn.textContent=bSound?"Stop Ambient":"Toggle Ambient";}
+function track(){let k="green_sessions",a=JSON.parse(localStorage[k]||"[]");a.push({when:new Date().toISOString()});localStorage[k]=JSON.stringify(a);}
 </script>
 </body>
 </html>
