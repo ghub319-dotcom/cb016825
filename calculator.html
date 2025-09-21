@@ -1,6 +1,9 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>GreenBite — Calculator</title><link rel="icon" href="assets/favicon.png"><link rel="stylesheet" href="styles.css"></head><body>
 <header class="container nav"><div class="brand"><div class="logo">GB</div></div><nav><div class="menu"><a href="index.html">Home</a><a href="recipes.html">Recipes</a></div></nav></header>
 <main class="container">
+  <div style="text-align:right;font-size:1.1em;margin-bottom:8px;">
+    <span id="clock"></span>
+  </div>
   <h2>Calorie & Nutrition Calculator</h2>
   <form id="calc-form" class="card" style="display:grid;gap:.6rem;max-width:600px">
     <div style="display:flex;gap:.6rem;flex-wrap:wrap">
@@ -23,10 +26,22 @@
   </form>
 
   <div id="results" class="card hidden" style="margin-top:1rem"></div>
+  <div id="fact-bar" class="card hidden" style="margin-top:1rem;background:#e6ffe6;color:#0a680d;font-weight:bold;text-align:center;"></div>
 </main>
 
 <script src="scripts/common.js"></script>
 <script>
+// Live clock
+function updateClock() {
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2,'0');
+  const m = String(now.getMinutes()).padStart(2,'0');
+  const s = String(now.getSeconds()).padStart(2,'0');
+  document.getElementById('clock').textContent = `${h}:${m}:${s}`;
+}
+setInterval(updateClock, 1000);
+updateClock();
+
 function calcBMR(age,gender,height,weight){
   if(gender==='male') return 10*weight + 6.25*height - 5*age + 5;
   return 10*weight + 6.25*height - 5*age - 161;
